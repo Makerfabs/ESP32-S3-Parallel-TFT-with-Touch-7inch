@@ -5,6 +5,9 @@
 #include <Audio.h>
 #include "JpegFunc.h"
 
+#define SCREEN_HD
+// #define SCREEN_NORMAL
+
 #define JPEG_FILENAME_LOGO "/logo.jpg"
 #define JPEG_FILENAME_COVER "/cover.jpg"
 #define JPEG_FILENAME_COVER_01 "/cover01.jpg"
@@ -25,10 +28,17 @@
 
 #define TOUCH_ROTATION ROTATION_NORMAL
 
+#define TFT_BL 10
+
+#ifdef SCREEN_HD
 #define SCREEN_W 1024
 #define SCREEN_H 600
+#endif
 
-#define TFT_BL 10
+#ifdef SCREEN_NORMAL
+#define SCREEN_W 800
+#define SCREEN_H 480
+#endif
 
 Arduino_ESP32RGBPanel *bus = new Arduino_ESP32RGBPanel(
     GFX_NOT_DEFINED /* CS */, GFX_NOT_DEFINED /* SCK */, GFX_NOT_DEFINED /* SDA */,
@@ -40,10 +50,11 @@ Arduino_ESP32RGBPanel *bus = new Arduino_ESP32RGBPanel(
 
 Arduino_RPi_DPI_RGBPanel *gfx = new Arduino_RPi_DPI_RGBPanel(
     bus,
-    1024 /* width */, 1 /* hsync_polarity */, 40 /* hsync_front_porch */, 48 /* hsync_pulse_width */, 128 /* hsync_back_porch */,
-    600 /* height */, 1 /* vsync_polarity */, 13 /* vsync_front_porch */, 3 /* vsync_pulse_width */, 45 /* vsync_back_porch */);
+    SCREEN_W /* width */, 1 /* hsync_polarity */, 40 /* hsync_front_porch */, 48 /* hsync_pulse_width */, 128 /* hsync_back_porch */,
+    SCREEN_H /* height */, 1 /* vsync_polarity */, 13 /* vsync_front_porch */, 3 /* vsync_pulse_width */, 45 /* vsync_back_porch */);
 
 TAMC_GT911 ts = TAMC_GT911(I2C_SDA_PIN, I2C_SCL_PIN, TOUCH_INT, TOUCH_RST, SCREEN_W, SCREEN_H);
+
 Audio audio;
 
 String img_list[5] =
@@ -295,15 +306,14 @@ int get_music_list(fs::FS &fs, const char *dirname, uint8_t levels, String wavli
   return i;
 }
 
-
 void audio_eof_mp3(const char *info)
 { // end of file
-    Serial.print("eof_mp3     ");
-    Serial.println(info);
-    music_index++;
-    if (music_index >= music_num)
-    {
-        music_index = 0;
-    }
-    open_new_song(music_list[music_index]);
+  Serial.print("eof_mp3     ");
+  Serial.println(info);
+  music_index++;
+  if (music_index >= music_num)
+  {
+    music_index = 0;
+  }
+  open_new_song(music_list[music_index]);
 }

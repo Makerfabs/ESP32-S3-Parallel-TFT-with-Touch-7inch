@@ -1,20 +1,33 @@
 #include <Arduino_GFX_Library.h>
-#include "Arduino.h"
-#include "Audio.h"
-#include "SPI.h"
-#include "SD.h"
-#include "FS.h"
+#include <SD_MMC.h>
+#include <TAMC_GT911.h>
+#include <Wire.h>
+#include <Audio.h>
 #include "JpegFunc.h"
 
-#define TFT_BL 10
+#define SCREEN_HD
+// #define SCREEN_NORMAL
 
-#define PIN_SD_CMD 11
-#define PIN_SD_CLK 12
-#define PIN_SD_D0 13
+#define TFT_BL 10
 
 #define I2S_DOUT 19
 #define I2S_BCLK 20
 #define I2S_LRC 2
+
+// microSD card
+#define PIN_SD_CMD 11
+#define PIN_SD_CLK 12
+#define PIN_SD_D0 13
+
+#ifdef SCREEN_HD
+#define SCREEN_W 1024
+#define SCREEN_H 600
+#endif
+
+#ifdef SCREEN_NORMAL
+#define SCREEN_W 800
+#define SCREEN_H 480
+#endif
 
 Arduino_ESP32RGBPanel *bus = new Arduino_ESP32RGBPanel(
     GFX_NOT_DEFINED /* CS */, GFX_NOT_DEFINED /* SCK */, GFX_NOT_DEFINED /* SDA */,
@@ -26,8 +39,12 @@ Arduino_ESP32RGBPanel *bus = new Arduino_ESP32RGBPanel(
 
 Arduino_RPi_DPI_RGBPanel *gfx = new Arduino_RPi_DPI_RGBPanel(
     bus,
-    1024 /* width */, 1 /* hsync_polarity */, 40 /* hsync_front_porch */, 48 /* hsync_pulse_width */, 128 /* hsync_back_porch */,
-    600 /* height */, 1 /* vsync_polarity */, 13 /* vsync_front_porch */, 3 /* vsync_pulse_width */, 45 /* vsync_back_porch */);
+    SCREEN_W /* width */, 1 /* hsync_polarity */, 40 /* hsync_front_porch */, 48 /* hsync_pulse_width */, 128 /* hsync_back_porch */,
+    SCREEN_H /* height */, 1 /* vsync_polarity */, 13 /* vsync_front_porch */, 3 /* vsync_pulse_width */, 45 /* vsync_back_porch */);
+
+int w = SCREEN_W;
+int h = SCREEN_H;
+
 
 struct Music_info
 {
@@ -80,21 +97,6 @@ void loop()
 
 void Task_TFT(void *pvParameters) // This is a task.
 {
-    while (0)
-    {
-        gfx->fillRect(0, 0, 512, 600, RED);
-        gfx->fillRect(512, 0, 512, 600, GREEN);
-        vTaskDelay(3000);
-
-        gfx->fillRect(0, 0, 512, 600, YELLOW);
-        gfx->fillRect(512, 0, 512, 600, BLUE);
-        vTaskDelay(3000);
-
-        gfx->fillRect(0, 0, 512, 600, BLACK);
-        gfx->fillRect(512, 0, 512, 600, WHITE);
-        vTaskDelay(3000);
-    }
-
     while (1) // A Task shall never return or exit.
     {
         jpegDraw(image_list[0].c_str(), jpegDrawCallback, true, 0, 0, gfx->width(), gfx->height());
@@ -209,7 +211,7 @@ void audio_eof_mp3(const char *info)
 { // end of file
     Serial.print("eof_mp3     ");
     Serial.println(info);
-    
+
     music_index++;
     if (music_index >= music_num)
     {
