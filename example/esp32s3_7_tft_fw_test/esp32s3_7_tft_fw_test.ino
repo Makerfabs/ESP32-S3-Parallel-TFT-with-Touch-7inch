@@ -6,7 +6,7 @@
 #include "JpegFunc.h"
 
 #define SCREEN_HD
-// #define SCREEN_NORMAL
+ //#define SCREEN_NORMAL
 
 #define JPEG_FILENAME_LOGO "/logo.jpg"
 #define JPEG_FILENAME_COVER "/cover.jpg"

@@ -27,8 +27,8 @@
 #include "lv_demo_widgets.h"
 #include <Arduino_GFX_Library.h>
 
-#define SCREEN_HD
-// #define SCREEN_NORMAL
+//#define SCREEN_HD
+ #define SCREEN_NORMAL
 
 #define TFT_BL 10
 
