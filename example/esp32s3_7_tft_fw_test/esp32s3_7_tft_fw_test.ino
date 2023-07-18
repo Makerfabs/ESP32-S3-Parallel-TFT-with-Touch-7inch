@@ -5,8 +5,8 @@
 #include <Audio.h>
 #include "JpegFunc.h"
 
-// #define SCREEN_HD
-#define SCREEN_NORMAL
+#define SCREEN_HD
+// #define SCREEN_NORMAL
 
 #define JPEG_FILENAME_LOGO "/logo.jpg"
 #define JPEG_FILENAME_COVER "/cover.jpg"
@@ -60,7 +60,8 @@ Arduino_RPi_DPI_RGBPanel *gfx = new Arduino_RPi_DPI_RGBPanel(
 Arduino_RPi_DPI_RGBPanel *gfx = new Arduino_RPi_DPI_RGBPanel(
     bus,
     SCREEN_W /* width */, 1 /* hsync_polarity */, 40 /* hsync_front_porch */, 48 /* hsync_pulse_width */, 128 /* hsync_back_porch */,
-    SCREEN_H /* height */, 1 /* vsync_polarity */, 13 /* vsync_front_porch */, 3 /* vsync_pulse_width */, 45 /* vsync_back_porch */);
+    SCREEN_H /* height */, 1 /* vsync_polarity */, 13 /* vsync_front_porch */, 3 /* vsync_pulse_width */, 45 /* vsync_back_porch */,
+    1 /* pclk_active_neg */, 16000000 /* prefer_speed */, true /* auto_flush */);
 #endif
 
 TAMC_GT911 ts = TAMC_GT911(I2C_SDA_PIN, I2C_SCL_PIN, TOUCH_INT, TOUCH_RST, SCREEN_W, SCREEN_H);
