@@ -9,19 +9,18 @@
 #define I2C_SCL_PIN 18
 #define TOUCH_INT -1
 #define TOUCH_RST 38
-
-#define TOUCH_ROTATION ROTATION_NORMAL
-
 #define TFT_BL 10
 
 #ifdef SCREEN_HD
 #define SCREEN_W 1024
 #define SCREEN_H 600
+#define TOUCH_ROTATION ROTATION_INVERTED
 #endif
 
 #ifdef SCREEN_NORMAL
 #define SCREEN_W 800
 #define SCREEN_H 480
+#define TOUCH_ROTATION ROTATION_NORMAL
 #endif
 
 Arduino_ESP32RGBPanel *bus = new Arduino_ESP32RGBPanel(
@@ -100,8 +99,8 @@ void touch_read()
     if (ts.isTouched)
     {
 #ifdef SCREEN_HD
-        touch_last_x = map(ts.points[0].x, 200, 1024, 0, SCREEN_W);
-        touch_last_y = map(ts.points[0].y, 120, 600, 0, SCREEN_H);
+        touch_last_x = map(ts.points[0].x, 0, 1024, 0, SCREEN_W);
+        touch_last_y = map(ts.points[0].y, 0, 750, 0, SCREEN_H);
 
 #endif
 #ifdef SCREEN_NORMAL
