@@ -5,8 +5,8 @@
 #include <Audio.h>
 #include "JpegFunc.h"
 
-// #define SCREEN_HD
-#define SCREEN_NORMAL
+#define SCREEN_HD
+//#define SCREEN_NORMAL
 
 #define JPEG_FILENAME_LOGO "/logo.jpg"
 #define JPEG_FILENAME_COVER "/cover.jpg"
@@ -135,17 +135,17 @@ void setup()
            0 /* x */, 0 /* y */, gfx->width() /* widthLimit */, gfx->height() /* heightLimit */);
   delay(1000);
 
-  // jpegDraw(JPEG_FILENAME_COVER_01, jpegDrawCallback, true /* useBigEndian */,
-  //          0 /* x */, 0 /* y */, gfx->width() /* widthLimit */, gfx->height() /* heightLimit */);
+   jpegDraw(JPEG_FILENAME_COVER_01, jpegDrawCallback, true /* useBigEndian */,
+            0 /* x */, 0 /* y */, gfx->width() /* widthLimit */, gfx->height() /* heightLimit */);
   // delay(500);
 
-  gfx->fillScreen(WHITE);
+  /*gfx->fillScreen(WHITE);
   gfx->setTextColor(BLACK);
   gfx->setTextSize(4);
   gfx->setCursor(0, 10);
   gfx->println("ESP32-S3 Parallel TFT with Touch 7\"");
   gfx->setCursor(10, 100);
-  gfx->println("3 points touch to continue...");
+  gfx->println("3 points touch to continue...");*/
 
   while (1)
   {
@@ -200,16 +200,16 @@ void setup()
 void Task_TFT(void *pvParameters) // This is a task.
 {
   while (1)
-    // for (int i = 0; i < 5; i++)
-    // {
-    //   Serial.println(img_list[i].c_str());
-    //   jpegDraw(img_list[i].c_str(), jpegDrawCallback, true /* useBigEndian */,
-    //            0 /* x */, 0 /* y */, SCREEN_W /* widthLimit */, SCREEN_H /* heightLimit */);
+     for (int i = 0; i < 5; i++)
+     {
+       Serial.println(img_list[i].c_str());
+       jpegDraw(img_list[i].c_str(), jpegDrawCallback, true /* useBigEndian */,
+                0 /* x */, 0 /* y */, SCREEN_W /* widthLimit */, SCREEN_H /* heightLimit */);
 
-    //   vTaskDelay(1000);
-    // }
+       vTaskDelay(1000);
+     }
 
-    graph_test();
+    //graph_test();
 }
 
 void Task_Audio(void *pvParameters) // This is a task.
