@@ -43,17 +43,25 @@ More detailed information you can get from
 
 ## How to Use
 
-1. Install ESP32 package v3.1.1 first and replace with the esp32-3.1.1-h (high_perf version)
+1. Install ESP32 package v3.1.1 first and replace with the esp32-3.1.1-h[high_perf version](https://github.com/esp-arduino-libs/ESP32_Display_Panel/blob/master/docs/envs/use_with_arduino.md#solution-for-screen-drift-issue-when-using-esp32-s3-to-drive-rgb-lcd-in-arduino-ide)
 
 2. Install Espressif ESP32_Display_Panel Library 1.0.2
 
-3. Open the example with Arduino IDE 3.x or above.
+3. Open the example with Arduino IDE 2.3.4 or above.
+   
 3.1 Select Board ESP32S3 Dev Module
+
 3.2 Select PSRAM from none to “OPI PSRAM”
+
 
 ## Compiled info
 Using library ESP32_Display_Panel at version 1.0.2 in folder: C:\Users\miand\Documents\Arduino\libraries\ESP32_Display_Panel 
+
 Using library esp-lib-utils at version 0.1.2 in folder: C:\Users\miand\Documents\Arduino\libraries\esp-lib-utils 
+
 Using library ESP32_IO_Expander at version 1.0.1 in folder: C:\Users\miand\Documents\Arduino\libraries\ESP32_IO_Expander 
+
 Using library lvgl at version 8.3.11 in folder: C:\Users\miand\Documents\Arduino\libraries\lvgl 
+
 Using library ui at version 1.0 in folder: C:\Users\miand\Documents\Arduino\libraries\ui 
+
