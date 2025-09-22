@@ -1,0 +1,636 @@
+esphome:
+  name: matouch-esp32s3-7
+  friendly_name: Matouch_ESP32S3_7
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+    version: recommended
+    sdkconfig_options:
+      CONFIG_ESP32S3_DEFAULT_CPU_FREQ_240: "y"
+      CONFIG_ESP32S3_DATA_CACHE_64KB: "y"
+      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: y
+      CONFIG_SPIRAM_RODATA: y
+      CONFIG_COMPILER_OPTIMIZATION_PERF: y
+      CONFIG_FREERTOS_UNICORE: n
+      CONFIG_FREERTOS_TIMER_TASK_STACK_DEPTH: "4096"
+      CONFIG_FREERTOS_TASK_NOTIFICATION_ARRAY_ENTRIES: "3"
+      CONFIG_ESPTOOLPY_FLASHSIZE_16MB: y
+
+# external_components:
+#   - source:
+#       type: local
+#       path: common_components
+#     components: [rgb565]
+#     refresh: never
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+# Enable logging
+logger:
+  level: DEBUG
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "5DQ0UsfBrLmofn2GjgWwrlGGbaa81g22Y+dfiQYff3I="
+
+ota:
+  - platform: esphome
+    password: "f92b6f28ac0f9f6471d5c881d1ea594d"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "matouch_esp32s3_7"
+    password: "F03ZsTI6ltRE"
+
+captive_portal:
+
+i2c:
+  - id: touch_i2c
+    sda: GPIO17
+    scl: GPIO18
+    scan: true
+
+image:
+  - id: logo
+    file: "assets/logo.jpg"
+    type: RGB565
+    resize: 190x63
+
+
+display:
+  - platform: rpi_dpi_rgb
+    id: rgb_display
+    color_order: RGB
+    pclk_frequency: 16MHz
+    dimensions:
+      width: 1024
+      height: 600
+    de_pin: 40
+    hsync_pin: 39
+    vsync_pin: 41
+    pclk_pin: 42
+    hsync_back_porch: 128
+    hsync_front_porch: 40
+    hsync_pulse_width: 48
+    vsync_back_porch: 45
+    vsync_front_porch: 13
+    vsync_pulse_width: 3
+    data_pins:
+      red:
+        - 45        #r1
+        - 48        #r2
+        - 47        #r3
+        - 21        #r4
+        - 14        #r5
+      green:
+        - 5         #g0
+        - 6         #g1
+        - 7         #g2
+        - 15        #g3
+        - 16        #g4
+        - 4         #g5
+      blue:
+        - 8         #b1
+        - 3         #b2
+        - 46        #b3
+        - 9         #b4
+        - 1         #b5
+
+touchscreen:
+  - platform: gt911
+    display: rgb_display
+    id: touch_screen
+    update_interval: 16ms
+    i2c_id: touch_i2c
+    transform:
+      swap_xy: false
+      mirror_x: false
+      mirror_y: false
+
+
+# binary_sensor:
+#   - platform: status
+#     name: Status sensor
+
+font:
+  - file: "gfonts://Roboto"
+    id: large_font
+    size: 32
+    bpp: 4
+
+  - file: "fonts/materialdesignicons-webfont.ttf"
+    id: icons_100
+    size: 100
+    bpp: 4
+    glyphs: [
+      "\U000F0594", # clear-night
+      "\U000F0590", # cloudy
+      "\U000F0F2F", # exceptional
+      "\U000F0591", # fog
+      "\U000F0592", # hail
+      "\U000F0593", # lightning
+      "\U000F067E", # lightning-rainy
+      "\U000F0595", # partlycloudy
+      "\U000F0596", # pouring
+      "\U000F0597", # rainy
+      "\U000F0598", # snowy
+      "\U000F067F", # snowy-rainy
+      "\U000F0599", # sunny
+      "\U000F059D", # windy
+      "\U000F059E", # windy-variant
+      "\U000F14E4", # sunny-off
+      "\U000F0335", # mdi-lightbulb
+      "\U000F0336", # mdi-lightbulb-outline
+      ]
+
+globals:
+  - id: brightness_global
+    type: float
+    restore_value: yes  # 断电保存
+    initial_value: '80'  # 默认80%
+  - id: youliang
+    type: int
+    initial_value: '60'
+    restore_value: yes
+
+output:
+  - platform: ledc
+    id: lcd_pwm_output
+    pin: GPIO10
+    # frequency: 20000hz
+    min_power: 0.07
+    inverted: true
+#######################################################################
+#  LVGL
+#######################################################################
+lvgl:
+  pages:
+    - id: main_page # Default page
+      widgets:
+        - meter:
+            x: 0
+            y: 0
+            width: 240
+            height: 240
+            id: speed_meter
+            scales:
+              range_from: 0
+              range_to: 300
+              angle_range: 270
+              rotation: 157.5
+              ticks:
+                count: 51
+                length: 3
+                major:
+                  stride: 5
+                  length: 13
+                  label_gap: 13
+              indicators:
+                - line:
+                    id: temperature_needle
+                    width: 2
+                    color: 0xFF0000
+                    r_mod: -4
+                - tick_style:
+                    start_value: 0
+                    end_value: 300
+                    color_start: 0x0000bd #FF0000
+                    color_end: 0xbd0000 #0000FF
+        - label:
+            id: speed_label
+            align_to:
+              id: speed_meter
+              align: OUT_TOP_MID
+              y: 100
+              x: -20
+            text: "0"
+        - label:
+            align_to:
+              id: speed_meter
+              align: OUT_TOP_MID
+              y: 100
+              x: 20
+            text: "KM/H"
+        - label:
+            align_to:
+              id: speed_meter
+              align: OUT_BOTTOM_MID
+              y: 10
+            text: "SPEED WIDGET"
+        - label:
+            align_to:
+              id: speed_meter
+              align: OUT_BOTTOM_MID
+              y: 10
+              x: 240
+            text: "OIL WIDGET"
+        - label:
+            align_to:
+              id: speed_meter
+              align: OUT_BOTTOM_MID
+              y: 10
+              x: 480
+            text: "TIME WIDGET"
+
+        - obj:
+            height: 240
+            width: 240
+            align_to:
+              id: speed_meter
+              align: OUT_RIGHT_MID
+            bg_color: 0xFFFFFF
+            border_width: 0
+            pad_all: 4
+            widgets:
+                - meter:
+                    height: 100%
+                    width: 100%
+                    border_width: 0
+                    bg_opa: TRANSP
+                    align: CENTER
+                    scales:
+                      - range_from: 0
+                        range_to: 60
+                        angle_range: 180 # sets the total angle to 180 = starts mid left and ends mid right
+                        ticks:
+                          count: 0
+                        indicators:
+                          - line:
+                              id: val_needle
+                              width: 8
+                              r_mod: 12 # sets line length by this much difference from the scale default radius
+                              value: -2
+                          - arc: # first half of the scale background
+                              color: 0x00FF00
+                              r_mod: 10 # radius difference from the scale default radius
+                              width: 31
+                              start_value: 0
+                              end_value: 30
+                          - arc: # second half of the scale background
+                              color: 0xFF3000
+                              r_mod: 10
+                              width: 31
+                              start_value: 30
+                              end_value: 60
+                - obj: # to cover the middle part of meter indicator line
+                    height: 146
+                    width: 146
+                    radius: 73
+                    align: CENTER
+                    border_width: 0
+                    bg_color: 0xFFFFFF
+                    pad_all: 0
+                - label: # gauge numeric indicator
+                    id: val_text
+                    text_font: montserrat_48
+                    align: CENTER
+                    y: -5
+                    text: "0"
+                - label: # lower range indicator
+                    text_font: montserrat_18
+                    align: CENTER
+                    y: 8
+                    x: -90
+                    text: "60"
+                - label: # higher range indicator
+                    text_font: montserrat_18
+                    align: CENTER
+                    y: 8
+                    x: 90
+                    text: "0"
+
+        - obj: # clock container
+            height: 240
+            width: 240
+            align_to:
+              id: speed_meter
+              align: OUT_RIGHT_MID
+              x: 240
+            pad_all: 0
+            border_width: 0
+            bg_color: 0xFFFFFF
+            widgets:
+              - meter: # clock face
+                  height: 220
+                  width: 220
+                  align: CENTER
+                  bg_opa: TRANSP
+                  border_width: 0
+                  text_color: 0x000000
+                  scales:
+                    - range_from: 0 # minutes scale
+                      range_to: 60
+                      angle_range: 360
+                      rotation: 90
+                      ticks:
+                        width: 1
+                        count: 61
+                        length: 10
+                        color: 0x000000
+                      indicators:
+                        - line:
+                            id: minute_hand
+                            width: 3
+                            color: 0xa6a6a6
+                            r_mod: -4
+                            value: 0
+                    - range_from: 1 # hours scale for labels
+                      range_to: 12
+                      angle_range: 330
+                      rotation: 30
+                      ticks:
+                        width: 1
+                        count: 12
+                        length: 1
+                        major:
+                          stride: 1
+                          width: 4
+                          length: 10
+                          color: 0xC0C0C0
+                          label_gap: 12
+                    - range_from: 0 # hi-res hours scale for hand
+                      range_to: 720
+                      angle_range: 360
+                      rotation: 90
+                      ticks:
+                        count: 0
+                      indicators:
+                        - line:
+                            id: hour_hand
+                            width: 5
+                            color: 0xa6a6a6
+                            r_mod: -30
+                            value: 0
+              - label:
+                  id: day_label
+                  align: CENTER
+                  y: -40
+              - label:
+                  id: date_label
+                  align: CENTER
+                  y: 40
+
+        - obj:
+            id: speed_meter_bottom
+            align_to:
+              id: speed_meter
+              align: OUT_BOTTOM_MID
+              y: 50
+            width: 228
+            height: 250
+            pad_all: 10
+            layout:
+              pad_column: 0
+              type: GRID
+              grid_rows: [FR(48), FR(13), FR(13), FR(13), FR(13)]
+              grid_columns: [FR(10), FR(40), FR(40), FR(10)]
+            widgets:
+              - label:
+                  text: "\U000F14E4"
+                  id: lbl_weather_forecast_condition_icon
+                  text_font: icons_100
+                  text_align: CENTER
+                  grid_cell_row_pos: 0
+                  grid_cell_column_pos: 0
+                  grid_cell_column_span: 2
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: START
+
+              - label:
+                  text: "City"
+                  id: lbl_weather_forecast_condition_name
+                  text_align: CENTER
+                  grid_cell_row_pos: 0
+                  grid_cell_column_pos: 2
+                  grid_cell_column_span: 2
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: CENTER
+
+              - label:
+                  text: "Feels like:"
+                  grid_cell_row_pos: 1
+                  grid_cell_column_pos: 1
+
+              - label:
+                  text: "20 °C"
+                  id: lbl_weather_forecast_tempap
+                  text_align: RIGHT
+                  grid_cell_row_pos: 1
+                  grid_cell_column_pos: 2
+                  grid_cell_x_align: STRETCH
+
+              - label:
+                  text: "Maximum:"
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 1
+
+              - label:
+                  text: 40 °C"
+                  id: lbl_weather_forecast_temphi
+                  text_align: RIGHT
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 2
+                  grid_cell_x_align: STRETCH
+
+              - label:
+                  text: "Minimum:"
+                  grid_cell_row_pos: 3
+                  grid_cell_column_pos: 1
+
+              - label:
+                  text: "10 °C"
+                  id: lbl_weather_forecast_templo
+                  text_align: RIGHT
+                  grid_cell_row_pos: 3
+                  grid_cell_column_pos: 2
+                  grid_cell_x_align: STRETCH
+
+              - label:
+                  text: "Now:"
+                  grid_cell_row_pos: 4
+                  grid_cell_column_pos: 1
+
+              - label:
+                  text: "25 °C"
+                  id: lbl_weather_outdnoor_now
+                  text_align: RIGHT
+                  grid_cell_row_pos: 4
+                  grid_cell_column_pos: 2
+                  grid_cell_x_align: STRETCH
+        - label:
+            align_to:
+              id: speed_meter_bottom 
+              align: OUT_BOTTOM_MID
+              y: 10
+            text: "WEATHER WIDGET"
+        - textarea:
+            id: textarea_1
+            placeholder_text: "Enter text here"
+            align_to:
+              id: speed_meter_bottom
+              align: OUT_RIGHT_TOP
+            width: 500
+            height: 100
+
+        - obj:
+            align_to:
+              id: speed_meter_bottom
+              align: OUT_RIGHT_BOTTOM
+            width: 500
+            height: 150
+            widgets:
+              - keyboard:
+                  mode: TEXT_UPPER
+                  height: 100%
+                  textarea: textarea_1
+        - label:
+            align_to:
+              id: speed_meter_bottom 
+              align: OUT_BOTTOM_MID
+              y: 10
+              x: 369
+            text: "KEYBOARD WIDGET"
+        
+        - slider:
+            id: lcd_pwm
+            align: TOP_RIGHT
+            x: -20
+            y: 25
+            max_value: 255
+            min_value: 0
+            value: 255
+            height: 90%
+            width: 40
+            on_release:
+              - output.set_level:
+                  id: lcd_pwm_output
+                  level: !lambda |-
+                    return x / 255.0;
+
+        - image:
+            src: logo
+            align: RIGHT_MID
+            x: -80
+            angle: 90
+            zoom: 3
+
+time:
+  - platform: homeassistant
+    id: time_comp
+    timezone: Asia/Shanghai
+    on_time_sync:
+      - script.execute: time_update
+    on_time:
+      - minutes: '*'
+        seconds: 0
+        then:
+          - script.execute: time_update
+
+script:
+  - id: time_update
+    then:
+      - lvgl.indicator.update:
+          id: minute_hand
+          value: !lambda |-
+            return id(time_comp).now().minute;
+      - lvgl.indicator.update:
+          id: hour_hand
+          value: !lambda |-
+            auto now = id(time_comp).now();
+            return std::fmod(now.hour, 12) * 60 + now.minute;
+      - lvgl.label.update:
+          id: date_label
+          text: !lambda |-
+            static const char * const mon_names[] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+                                                     "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
+            static char date_buf[8];
+            auto now = id(time_comp).now();
+            snprintf(date_buf, sizeof(date_buf), "%s %2d", mon_names[now.month-1], now.day_of_month);
+            return date_buf;
+      - lvgl.label.update:
+          id: day_label
+          text: !lambda |-
+            static const char * const day_names[] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
+            return day_names[id(time_comp).now().day_of_week - 1];
+
+
+# 添加一个循环触发器来定期执行动画
+interval:
+  - interval: 50ms
+    then:
+      - lambda: |-
+          static uint32_t start_time = millis();
+          float elapsed = (millis() - start_time) / 1000.0f;  // 秒
+          float cycle_time = 10.0f;  // 10秒一个循环
+          
+          // 使用正弦波生成0-300的值
+          float value = 150 + 150 * sin(2 * M_PI * elapsed / cycle_time);
+          
+          auto meter = id(speed_meter);
+          lv_meter_set_indicator_value(meter, id(temperature_needle), value);
+          lv_label_set_text_fmt(id(speed_label), "%d", (int)value);
+  - interval: 1s
+    then:
+      # 第一个lambda：只负责更新全局变量的逻辑
+      - lambda: |-
+          if (id(youliang) <= 0) {
+            id(youliang) = 60;
+          } else {
+            id(youliang)--;
+          }
+
+      # 第二个动作：更新指针，从全局变量中读取值
+      - lvgl.indicator.update:
+          id: val_needle
+          value: !lambda return 60 - id(youliang);
+
+      # 第三个动作：更新标签，同样从全局变量中读取值
+      - lvgl.label.update:
+          id: val_text
+          text:
+            format: "%d"
+            args: [ 'id(youliang)' ] # 注意：这里直接写 id(youliang)，不要加引号
+text:
+  - platform: lvgl
+    name: fr_cond_icon
+    widget: lbl_weather_forecast_condition_icon
+    mode: text
+  - platform: lvgl
+    name: fr_cond_name
+    widget: lbl_weather_forecast_condition_name
+    mode: text
+  - platform: lvgl
+    name: fr_tempap
+    widget: lbl_weather_forecast_tempap
+    mode: text
+  - platform: lvgl
+    name: fr_temphi
+    widget: lbl_weather_forecast_temphi
+    mode: text
+  - platform: lvgl
+    name: fr_templo
+    widget: lbl_weather_forecast_templo
+    mode: text
+  - platform: lvgl
+    name: wd_out_now
+    widget: lbl_weather_outdnoor_now
+    mode: text
+
+#######################################################################
+#  SENSOR
+#######################################################################
+
+
+
+
+
